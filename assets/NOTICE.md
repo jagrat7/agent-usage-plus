@@ -21,6 +21,12 @@ variant convention (near-white `#F1ECEC` on dark surfaces, near-black
 no-ops over the full viewBox and have been removed; the mark paths are
 unchanged.
 
+`devin.svg` uses Lobe Icons' normalized color mark under its MIT license. Its
+three colors are Cognition's published Devin palette; square viewBox padding
+keeps its visible size aligned with the other provider marks at bar scale.
+
+Copyright © 2023 LobeHub.
+
 Copyright (c) 2026 Peter Steinberger
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
