@@ -173,11 +173,40 @@ Item {
   property int refreshIntervalSec: Math.max(30, Number(setting("refreshIntervalSec", 300)))
   property string pendingUpdateKind: ""
 
+  // The first refresh waits for the shell to hand over the settings. This
+  // timer used to fire on start, before `settings` had arrived, so the
+  // exclusion list `updateCommand` builds from them was empty and every
+  // collector ran once — including one the user had switched off, which then
+  // wrote a "waiting for sign-in" record and put a card back in the panel on
+  // every shell restart. Settings normally arrive within the first tick; the
+  // grace timer covers a widget the shell never hands any to.
+  property bool refreshStarted: false
+
+  function startRefreshing() {
+    if (refreshStarted) return
+    refreshStarted = true
+    settingsGrace.stop()
+    refreshTimer.start()
+    runUpdate("normal")
+  }
+
+  onSettingsChanged: {
+    if (!refreshStarted && settings && Object.keys(settings).length > 0) startRefreshing()
+  }
+
   Timer {
-    interval: root.refreshIntervalSec * 1000
+    id: settingsGrace
+    interval: 5000
     running: true
+    repeat: false
+    onTriggered: root.startRefreshing()
+  }
+
+  Timer {
+    id: refreshTimer
+    interval: root.refreshIntervalSec * 1000
+    running: false
     repeat: true
-    triggeredOnStart: true
     onTriggered: root.runUpdate("normal")
   }
 
@@ -401,6 +430,7 @@ Item {
   // one just by installing the widget. See Panel.qml for the actual
   // threshold-crossing watch and Omarchy notification dispatch queue.
   readonly property bool notificationsEnabled: booleanSetting("notificationsEnabled", false)
+  readonly property bool openInDetailedView: booleanSetting("openInDetailedView", false)
   // Presentation only: the UI may show the available complement, while
   // collectors and internal threshold comparisons retain their canonical
   // used fractions so switching modes never changes when a warning fires.
@@ -583,6 +613,10 @@ Item {
 
   function setNotificationsEnabled(value) {
     writeSetting("notificationsEnabled", JSON.stringify(!!value))
+  }
+
+  function setOpenInDetailedView(value) {
+    writeSetting("openInDetailedView", JSON.stringify(!!value))
   }
 
   function setShowAvailablePercentage(value) {
